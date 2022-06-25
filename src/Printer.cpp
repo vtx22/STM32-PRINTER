@@ -6,45 +6,30 @@ PRINTER::PRINTER(UART_HandleTypeDef* huart)
 	_huart = huart;
 }
 
-void PRINTER::printFloat(float value)
+void PRINTER::print(std::string message)
 {
-#ifdef PRINTER_DEBUG
-
-
-	__disable_irq();
-	char temp[25];
-	uint8_t data[25];
-
-	int cnt = sprintf(temp, "%f", value);
-
-	for(int i = 0; i < cnt + 1; i++)
-	{
-		data[i] = temp[i];
-	}
-
-	HAL_UART_Transmit(_huart, data, cnt, 100);
-	println();
-	__enable_irq();
-#endif
+	HAL_UART_Transmit(_huart, (uint8_t*)message.c_str(), message.length(), UART_TIMEOUT);
 }
 
-void PRINTER::printString(std::string str)
+void PRINTER::print(float value)
 {
-#ifdef PRINTER_DEBUG
-	__disable_irq();
-	std::vector<uint8_t> vec(str.begin(), str.end());
-	uint8_t *data = &vec[0];
-	//data[str.length()] = '\0';
-
-	HAL_UART_Transmit(_huart, data, str.length(), 100);
-	println();
-	__enable_irq();
-#endif
+	std::string message = std::to_string(value);
+	HAL_UART_Transmit(_huart, (uint8_t*)message.c_str(), message.length(), UART_TIMEOUT);
 }
+
+void PRINTER::println(std::string message)
+{
+	HAL_UART_Transmit(_huart, (uint8_t*)(message+"\n").c_str(), message.length(), UART_TIMEOUT);
+}
+
+void PRINTER::println(float value)
+{
+	std::string message = std::to_string(value) + "\n";
+	HAL_UART_Transmit(_huart, (uint8_t*)message.c_str(), message.length(), UART_TIMEOUT);
+}
+
 
 void PRINTER::println()
 {
-	uint8_t nl[1];
-	nl[0] = '\n';
-	HAL_UART_Transmit(_huart, nl, 1, 100);
+	HAL_UART_Transmit(_huart, (uint8_t*)"\n", 1, UART_TIMEOUT);
 }
